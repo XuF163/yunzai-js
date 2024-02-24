@@ -39,7 +39,7 @@ export class example extends plugin {
 
     if (await redis.exists(`PAIMON:BAN:${groupId}:${e.sender.user_id}`) === 1) {
       let remainingTime = await redis.ttl(`PAIMON:BAN:${groupId}:${e.sender.user_id}`);
-      e.reply(`您被禁言中，剩余禁言时间为 ${remainingTime} 秒，无法参与游戏。`);
+      e.reply(`您被被迫出局中，剩余被迫出局时间为 ${remainingTime} 秒，无法参与游戏。`);
       return;
     }
 
@@ -64,18 +64,18 @@ export class example extends plugin {
       await this.startELSGame(e);
     }
 
-    let arr = JSON.parse(await redis.get(`PAIMON:ELS2:${groupId}`));
-    if (arr === null) {
-      await redis.del(`PAIMON:ELS2:${groupId}`);
-      await this.startELSGame(e);
-      return;
-    }
-
     let banTime = await redis.get(`PAIMON:BAN:${groupId}:${e.sender.user_id}`);
     if (banTime !== null) {
       let remainingTime = parseInt(banTime, 10) - Math.floor(Date.now() / 1000);
       let butn = [[{ text: "开枪", input: "开枪", send: true }]];
-      e.reply([segment.at(e.user_id),`您被禁言中，剩余禁言时间为 ${remainingTime} 秒，无法开枪。`, segment.button(...butn)]);
+      e.reply([segment.at(e.user_id),`您被被迫出局中，剩余被迫出局时间为 ${remainingTime} 秒，无法开枪。`, segment.button(...butn)]);
+      return;
+    }
+
+    let arr = JSON.parse(await redis.get(`PAIMON:ELS2:${groupId}`));
+    if (arr === null) {
+      await redis.del(`PAIMON:ELS2:${groupId}`);
+      await this.startELSGame(e);
       return;
     }
 
@@ -96,7 +96,7 @@ export class example extends plugin {
       let time = Math.floor(Math.random() * 240) + 60;
       await redis.set(`PAIMON:BAN:${groupId}:${e.sender.user_id}`, String(Math.floor(Date.now() / 1000) + time), { EX: time });
       let butn = [[{ text: "开枪", input: "开枪", send: true }]];
-      e.reply([segment.at(e.user_id), `开了一枪，枪响了。\n恭喜您被禁言了 ${time} 秒。\n本轮游戏结束。请使用#开盘 开启新一轮游戏`, segment.button(...butn)]);
+      e.reply([segment.at(e.user_id), `开了一枪，枪响了。\n恭喜您被被迫出局了 ${time} 秒。\n本轮游戏结束。请使用#开盘 开启新一轮游戏`, segment.button(...butn)]);
       await redis.del(`PAIMON:ELS2:${groupId}`);
     }
   }
